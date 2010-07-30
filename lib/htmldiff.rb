@@ -15,16 +15,22 @@ module HTMLDiff
 
   class DiffBuilder
 
-    def initialize(old_version, new_version)
+    def initialize(old_version, new_version, dual = false)
       @old_version, @new_version = old_version, new_version
-      @content = []
+      @dual = dual
+      if @dual
+        @new_content = []
+        @old_content = []
+      else
+        @content = []
+      end
     end
 
     def build
       split_inputs_to_words
       index_new_words
       operations.each { |op| perform_operation(op) }
-      return @content.join
+      return @dual ? [ @old_content.join, @new_content.join ] : @content.join 
     end
 
     def split_inputs_to_words
@@ -174,16 +180,21 @@ module HTMLDiff
     end
     
     def insert(operation, tagclass = 'diffins')
-      insert_tag('ins', tagclass, @new_words[operation.start_in_new...operation.end_in_new])
+      insert_tag('ins', tagclass, @new_words[operation.start_in_new...operation.end_in_new], @dual ? @new_content : @content)
     end
     
     def delete(operation, tagclass = 'diffdel')
-       insert_tag('del', tagclass, @old_words[operation.start_in_old...operation.end_in_old])
+       insert_tag('del', tagclass, @old_words[operation.start_in_old...operation.end_in_old], @dual ? @old_content : @content)
     end
     
     def equal(operation)
       # no tags to insert, simply copy the matching words from one of the versions
-      @content += @new_words[operation.start_in_new...operation.end_in_new]
+      if @dual
+        @old_content += @old_words[operation.start_in_old...operation.end_in_old]
+        @new_content += @new_words[operation.start_in_new...operation.end_in_new]
+      else
+        @content += @new_words[operation.start_in_new...operation.end_in_new]
+      end
     end
   
     def opening_tag?(item)
@@ -213,6 +224,10 @@ module HTMLDiff
       end
     end
 
+    def add_special_attribute opening_tag, type
+      opening_tag.sub('>', ' difftype="' + type + '">')
+    end
+
     # This method encloses words within a specified tag (ins or del), and adds this into @content, 
     # with a twist: if there are words contain tags, it actually creates multiple ins or del, 
     # so that they don't include any ins or del. This handles cases like
@@ -224,14 +239,24 @@ module HTMLDiff
     # 
     # P.S.: Spare a thought for people who write HTML browsers. They live in this ... every day.
 
-    def insert_tag(tagname, cssclass, words)
+    def insert_tag(tagname, cssclass, words, content)
       loop do
         break if words.empty?
         non_tags = extract_consecutive_words(words) { |word| not tag?(word) }
-        @content << wrap_text(non_tags.join, tagname, cssclass) unless non_tags.empty?
+        content << wrap_text(non_tags.join, tagname, cssclass) unless non_tags.empty?
 
         break if words.empty?
-        @content += extract_consecutive_words(words) { |word| tag?(word) }
+        loop do
+          opening = opening_tag? words.first
+          closing = closing_tag? words.first
+          break unless opening || closing
+          if opening
+            content << add_special_attribute(words.shift, cssclass)
+          else
+            content << words.shift
+          end
+        end
+        #content.push(*extract_consecutive_words(words) { |word| tag?(word) })
       end
     end
 
@@ -309,8 +334,7 @@ module HTMLDiff
 
   end # of class Diff Builder
   
-  def diff(a, b)
-    DiffBuilder.new(a, b).build
+  def diff(a, b, dual = false)
+    DiffBuilder.new(a, b, dual).build
   end
-
 end
