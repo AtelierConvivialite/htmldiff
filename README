@@ -1,15 +1,8 @@
-class Stuff
+A diff library that uses html tags to show differences
 
-  class << self
-    include HTMLDiff
-  end
-  
-  # or extend HTMLDiff ?
+    HTMLDiff.diff('a word is here', 'a nother word is there')
+    # => 'a<ins class=\"diffins\"> nother</ins> word is <del class=\"diffmod\">here</del><ins class=\"diffmod\">there</ins>'
 
-end
+    # => 'a<ins class=\"diffins\"> nother</ins> word is <del class=\"diffmod\">here</del><ins class=\"diffmod\">there</ins>'
 
-Stuff.diff('a word is here', 'a nother word is there')
-
-# => 'a<ins class=\"diffins\"> nother</ins> word is <del class=\"diffmod\">here</del><ins class=\"diffmod\">there</ins>'
-
-Checkout the crappy specs for good examples. 
+Checkout the crappy specs for good examples.
