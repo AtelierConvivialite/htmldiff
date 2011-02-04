@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = "edouard-htmldiff"
-  s.version = "0.0.3"
+  s.version = "0.0.4"
   s.summary = %q{HTML diffs of text}
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
