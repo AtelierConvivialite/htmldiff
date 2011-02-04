@@ -334,8 +334,8 @@ class HTMLDiff
 
   end # of class Diff Builder
 
-  def HTMLDiff.diff(a, b)
-    HTMLDiff.new.diff(a, b)
+  def HTMLDiff.diff(a, b, dual = false)
+    HTMLDiff.new.diff(a, b, dual)
   end
   
   def diff(a, b, dual = false)
